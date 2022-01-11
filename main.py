@@ -1,6 +1,6 @@
 # This is a the swiss Unihockey Worker from Eintracht Beromünster
-#You may change the Id's in the config File. Ids can be found on swissunihockey. Supposedly over the api v-2
-#https://api-v2.swissunihockey.ch/api/doc
+# You may change the Id's in the config File. Ids can be found on swissunihockey. Supposedly over the api v-2
+# https://api-v2.swissunihockey.ch/api/doc
 
 # Press Umschalt+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -19,7 +19,6 @@ from tkinter.filedialog import asksaveasfilename
 from tkinter.filedialog import askopenfile
 from tkinter import messagebox
 
-
 base_key = 'https://api-v2.swissunihockey.ch/api/'
 configFile = 'config.txt'
 
@@ -27,6 +26,11 @@ with open(configFile) as f:
     ids = f.readlines()
 
 root = tk.Tk()
+root.title("Spielplanerstellung")
+root.iconbitmap("ball.ico")
+
+
+
 def createGui():
     canvas = tk.Canvas(root, height=300, width=650)
     canvas.pack()
@@ -34,7 +38,7 @@ def createGui():
     titelFrame = tk.Frame(root)
     titelFrame.place(relwidth=1, relheight=0.1, relx=0.00, rely=0.05)
 
-#columns for a grid in the gui
+    # columns for a grid in the gui
     column1 = tk.Frame(root)
     column1.place(relwidth=0.25, relheight=0.75, relx=0.05, rely=0.25)
 
@@ -47,7 +51,7 @@ def createGui():
     greeting = tk.Label(titelFrame, text="Spielplanerstellung Eintracht Beromünster", font=("Arial", 25))
     greeting.pack()
 
-#Team-Ids from swissunihockey. Are used with the buttons
+    # Team-Ids from swissunihockey. Are used with the buttons
     # team-Ids
     id_aJun = getId("id_aJun")
     id_bJun = getId("id_bJun")
@@ -63,7 +67,7 @@ def createGui():
 
     print(id_aJun)
 
-#Buttons for the gui
+    # Buttons for the gui
     btn_AJun = tk.Button(column1, text="A Junioren", padx=10, pady=10, fg="white", bg="#000000", width=50,
                          command=lambda: getTeamGames(id_aJun)).pack()
     btn_BJun = tk.Button(column1, text="B Junioren", padx=10, pady=10, fg="white", bg="#000000", width=50,
@@ -71,7 +75,7 @@ def createGui():
     btn_CJun = tk.Button(column1, text="C Junioren", padx=10, pady=10, fg="white", bg="#000000", width=50,
                          command=lambda: getTeamGames(id_cJun)).pack()
     btn_Djun = tk.Button(column1, text="D Junioren", padx=10, pady=10, fg="white", bg="#000000", width=50,
-                        command=lambda: getTeamGames(id_dJun)).pack()
+                         command=lambda: getTeamGames(id_dJun)).pack()
 
     btn_AJuniorinnen = tk.Button(column2, text="A Juniorinnen", padx=10, pady=10, fg="white", bg="#000000", width=50,
                                  command=lambda: getTeamGames(id_aInnen)).pack()
@@ -93,89 +97,91 @@ def createGui():
 
     root.mainloop()
 
-#Function which gets called when a team-button is pressed
+
+# Function which gets called when a team-button is pressed
 def getTeamGames(team_id):
     print(team_id)
     print("---")
-    if('None' not in team_id ):
+    if ('None' not in team_id):
         saveFileName = asksaveasfilename(parent=root, title="Speicherort auswählen", filetype=[("Excel", "*.xlsx")])
         if (saveFileName):
 
             saison = getSaison()
 
-    #gets Title for Excel
+            # gets Title for Excel
             r = requests.get(base_key + f'games?mode=team&team_id={team_id}&season={saison}&page=1')
             data = pd.json_normalize(r.json())
             title = data['data.title']
             title = str(title[0])
 
-            #prepares everything for requests
+            # prepares everything for requests
             page = 1
             games = pd.DataFrame()
 
-    # Loop that calls requests until all games were fetched. Has an upper limit to not accidentally spam the api
+            # Loop that calls requests until all games were fetched. Has an upper limit to not accidentally spam the api
             while (page < 10):
 
-    #Link where data gets requested. team id, saison and page are dynamic
+                # Link where data gets requested. team id, saison and page are dynamic
                 teamUrl = base_key + f'games?mode=team&team_id={team_id}&season={saison}&page={page}'
 
                 r = requests.get(teamUrl)
                 error = r.json()
 
-    #Determines error answer
+                # Determines error answer
                 if ("Error" in str(error['type'])):
                     break
                 else:
                     games = createDataframeMatch(r, games)
                     page += 1
 
-    #deletes all excessive duplicates, then saves the data in an excel and then opens the explorer to show the file
+            # deletes all excessive duplicates, then saves the data in an excel and then opens the explorer to show the file
             games.drop_duplicates(subset=['Datum', 'Ort'], inplace=True)
 
             saveExcel(games, title, saveFileName)
 
             openExplorer(saveFileName)
 
-    #Falls kein Speicherort ausgewählt wird
+        # Falls kein Speicherort ausgewählt wird
         else:
             messagebox.showerror("Fehler", "Sie haben den Erstellungsvorgang abgebrochen")
     else:
         messagebox.showerror("Fehler", "Keine ID hinterlegt. Korrigieren sie diese im config File", )
 
-#Gets all Games from the club and saves them in xlsx
-def getAllGames():
-    saveFileName = asksaveasfilename(parent = root, title = "Speicherort auswählen", filetype=[("Excel", "*.xlsx")] )
 
-    if(saveFileName):
+# Gets all Games from the club and saves them in xlsx
+def getAllGames():
+    saveFileName = asksaveasfilename(parent=root, title="Speicherort auswählen", filetype=[("Excel", "*.xlsx")])
+
+    if (saveFileName):
         club_id = getId("club_id")
 
         saison = getSaison()
 
-#Preparation for data requests
+        # Preparation for data requests
         games = pd.DataFrame()
         page = 1
 
-#gets Title
+        # gets Title
         r = requests.get(base_key + f'games?mode=club&club_id={club_id}&season={saison}&page=1')
-        data= pd.json_normalize(r.json())
+        data = pd.json_normalize(r.json())
         title = data['data.title']
         title = str(title[0])
 
         while (page < 25):
-            #Url from which Data is fetched
+            # Url from which Data is fetched
             allUrl = base_key + f'games?mode=club&club_id={club_id}&season={saison}&page={page}'
 
             r = requests.get(allUrl)
             error = r.json()
 
-#Determines error answer
+            # Determines error answer
             if ("Error" in str(error['type'])):
                 break
             else:
                 games = createDataframe(r, games)
                 page += 1
 
-#Deletes excessive duplicates, then saves the file and opens in explorer
+        # Deletes excessive duplicates, then saves the file and opens in explorer
         games.drop_duplicates(subset=['Datum', 'Liga', 'Ort'], inplace=True)
 
         saveExcel(games, title, saveFileName)
@@ -185,19 +191,20 @@ def getAllGames():
     else:
         messagebox.showerror("Fehler", "Sie haben den Erstellungsvorgang abgebrochen")
 
-#Processes requestdata into dataframe
+
+# Processes requestdata into dataframe
 def createDataframe(data, games):
     data = pd.json_normalize(data.json())
     matchList = pd.json_normalize(data['data.regions'])
 
-#Normalizes data
+    # Normalizes data
     matchList = pd.json_normalize(matchList.iloc[0])
     matchList = pd.json_normalize(matchList['rows'])
     matchList = pd.json_normalize(matchList.iloc[0])
     matchList = pd.json_normalize(matchList['cells'])
 
     i = 0
-    #Fills normalized data into dataframe structure
+    # Fills normalized data into dataframe structure
     for row in matchList.iterrows():
         game = pd.json_normalize(matchList.iloc[i])
         game = game['text']
@@ -215,25 +222,25 @@ def createDataframe(data, games):
             "Gegner 2": getSameDayMatch(game[0], game[2], matchList, i, "opponent"),
 
         }
-#appends dict to dataframe
+        # appends dict to dataframe
         games = games.append(gamedict, ignore_index=True)
         i += 1
     return games
 
 
-#Processes data from match requests
+# Processes data from match requests
 def createDataframeMatch(data, games):
     data = pd.json_normalize(data.json())
     matchList = pd.json_normalize(data['data.regions'])
 
-#normalizes data
+    # normalizes data
     matchList = pd.json_normalize(matchList.iloc[0])
     matchList = pd.json_normalize(matchList['rows'])
     matchList = pd.json_normalize(matchList.iloc[0])
     matchList = pd.json_normalize(matchList['cells'])
 
     i = 0
-    #Fills normalized data into dataframe structure. Different dict than in function above
+    # Fills normalized data into dataframe structure. Different dict than in function above
     for row in matchList.iterrows():
         game = pd.json_normalize(matchList.iloc[i])
         game = game['text']
@@ -250,17 +257,18 @@ def createDataframeMatch(data, games):
 
         }
 
-#appends dict to dataframe
+        # appends dict to dataframe
         games = games.append(gamedict, ignore_index=True)
         i += 1
 
     return games
 
-#saves the datafram into an excel and adjusts layout
+
+# saves the datafram into an excel and adjusts layout
 def saveExcel(games, title, filename):
     # Set destination directory to save excel.
     if ".xlsx" not in filename:
-        filename = filename+ '.xlsx'
+        filename = filename + '.xlsx'
 
     xlsFilepath = filename
     writer = pd.ExcelWriter(xlsFilepath, engine='xlsxwriter')
@@ -271,7 +279,7 @@ def saveExcel(games, title, filename):
     workbook = writer.book
     worksheet = writer.sheets['Sheet1']
 
-#adjusts column-layout
+    # adjusts column-layout
     for i, col in enumerate(games.columns):
         # find length of column i
         column_len = games[col].astype(str).str.len().max()
@@ -282,7 +290,7 @@ def saveExcel(games, title, filename):
         worksheet.set_column(i, i, column_len)
     writer.save()
 
-#Adds the title to the existing File
+    # Adds the title to the existing File
     # load excel file
     workbook = load_workbook(filename=xlsFilepath)
     # open workbook
@@ -294,7 +302,8 @@ def saveExcel(games, title, filename):
 
     return
 
-#compares games from a list to find matching Date Location used for Teams
+
+# compares games from a list to find matching Date Location used for Teams
 def getSameDayMatchwithoutLiga(date, matchliste, rowCount, type):
     i = 0
     for row in matchliste.iterrows():
@@ -311,7 +320,8 @@ def getSameDayMatchwithoutLiga(date, matchliste, rowCount, type):
         i += 1
     return "-"
 
-#compares games from a list to find matching Date Location and Liga. Used for allGames
+
+# compares games from a list to find matching Date Location and Liga. Used for allGames
 def getSameDayMatch(date, liga, matchliste, rowCount, type):
     i = 0
     for row in matchliste.iterrows():
@@ -328,7 +338,8 @@ def getSameDayMatch(date, liga, matchliste, rowCount, type):
         i += 1
     return "-"
 
-#Compares teamnames with "Eintracht Beromünster" and determines which one the opponent is
+
+# Compares teamnames with "Eintracht Beromünster" and determines which one the opponent is
 def getOpponent(team1, team2):
     if "Eintracht Beromünster" not in team1:
         return team1
@@ -337,7 +348,8 @@ def getOpponent(team1, team2):
     else:
         return "Undefiniert"
 
-#Deletes excessive words from Liga
+
+# Deletes excessive words from Liga
 def cleanLiga(word):
     unwantedWords = ["Regional", "Aktive"]
 
@@ -347,7 +359,8 @@ def cleanLiga(word):
     description = new_word.split(',');
     return description[0];
 
-#Cleans the word from unwanted characters
+
+# Cleans the word from unwanted characters
 def cleanWord(word):
     unwantedCharacters = "[]'"
 
@@ -358,7 +371,8 @@ def cleanWord(word):
 
     return word
 
-#Splits time so date and time are seperately storable. Takes bool as input to determine which has to be returned
+
+# Splits time so date and time are seperately storable. Takes bool as input to determine which has to be returned
 def splitTime(datetime, type):
     datetime = str(datetime)
 
@@ -377,7 +391,8 @@ def splitTime(datetime, type):
         except:
             return "-"
 
-#Opens Explorer with inputted directory. Used to show the saved file at the end
+
+# Opens Explorer with inputted directory. Used to show the saved file at the end
 def openExplorer(saveFileName):
     saveFileName = makeInitialDir(saveFileName)
     file = askopenfile(parent=root, title="Erfolgreich gespeichert", initialdir=saveFileName, mode="r",
@@ -386,14 +401,16 @@ def openExplorer(saveFileName):
     if (file):
         os.startfile(file)
 
-#Gets the path without the filenam for openExplorer function
+
+# Gets the path without the filenam for openExplorer function
 def makeInitialDir(path):
     array = path.split('/');
     path = path.replace(array[len(array) - 1], "")
 
     return path;
 
-#Function to determine game-saison. Changes on the month of april
+
+# Function to determine game-saison. Changes on the month of april
 def getSaison():
     now = datetime.datetime.now()
     if (now.month > 3):
@@ -403,11 +420,13 @@ def getSaison():
 
     return saison
 
+
 def getId(searchTerm):
     for id in ids:
         if searchTerm in id:
             number = id.split('$')
             return number[1]
+
 
 # Press the green button in the gutter to run the script.
 createGui()
