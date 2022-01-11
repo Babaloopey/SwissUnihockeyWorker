@@ -1,4 +1,4 @@
-#To Reduce Errors in production
+# To Reduce Errors in production
 import sys, os
 
 
@@ -18,6 +18,7 @@ if hasattr(sys, "frozen"):
     # delay importing until after where() has been replaced
     import requests.utils
     import requests.adapters
+
     # replace these variables in case these modules were
     # imported before we replaced certifi.core.where
     requests.utils.DEFAULT_CA_BUNDLE_PATH = override_where()
@@ -55,7 +56,6 @@ root.title("Spielplanerstellung")
 root.iconbitmap("ball.ico")
 
 
-
 def createGui():
     canvas = tk.Canvas(root, height=300, width=650)
     canvas.pack()
@@ -89,8 +89,7 @@ def createGui():
     id_damen = getId("id_damen")
     id_herren1 = getId("id_herren1")
     id_herren2 = getId("id_herren2")
-
-    print(id_aJun)
+    club_id = getId("club_id")
 
     # Buttons for the gui
     btn_AJun = tk.Button(column1, text="A Junioren", padx=10, pady=10, fg="white", bg="#000000", width=50,
@@ -112,7 +111,7 @@ def createGui():
                                  width=50, command=lambda: getTeamGames(id_dInnen)).pack()
 
     btn_allGames = tk.Button(column3, text="Alle Spiele", padx=10, pady=10, fg="white", bg="#000000", width=50,
-                             command=getAllGames).pack()
+                             command=lambda: getAllGames(club_id)).pack()
     btn_Herren1 = tk.Button(column3, text="Herren 1", padx=10, pady=10, fg="white", bg="#000000", width=50,
                             command=lambda: getTeamGames(id_herren1)).pack()
     btn_Herren2 = tk.Button(column3, text="Herren 2", padx=10, pady=10, fg="white", bg="#000000", width=50,
@@ -129,8 +128,10 @@ def getTeamGames(team_id):
     print("---")
     if ('None' not in team_id):
         saveFileName = asksaveasfilename(parent=root, title="Speicherort auswählen", filetype=[("Excel", "*.xlsx")])
-        if (saveFileName):
 
+        if (saveFileName):
+            messagebox.showinfo("In Bearbeitung",
+                                "Das Erstellen der Liste dauert einen Moment. Wenn es fertig ist, wird der Dateimanager geöffnet")
             saison = getSaison()
 
             # gets Title for Excel
@@ -160,8 +161,9 @@ def getTeamGames(team_id):
                     games = createDataframeMatch(r, games)
                     page += 1
 
+            getSameDayGameswithoutLiga(games)
             # deletes all excessive duplicates, then saves the data in an excel and then opens the explorer to show the file
-            games.drop_duplicates(subset=['Datum', 'Ort'], inplace=True)
+            games.drop_duplicates(subset=['Datum', 'Ort'], inplace=True, keep='first')
 
             saveExcel(games, title, saveFileName)
 
@@ -169,17 +171,68 @@ def getTeamGames(team_id):
 
         # Falls kein Speicherort ausgewählt wird
         else:
-            messagebox.showerror("Fehler", "Sie haben den Erstellungsvorgang abgebrochen")
+            messagebox.showinfo("Fehler", "Sie haben den Erstellungsvorgang abgebrochen")
     else:
         messagebox.showerror("Fehler", "Keine ID hinterlegt. Korrigieren sie diese im config File", )
 
 
+# Processes data from match requests
+def createDataframeMatch(data, games):
+    data = pd.json_normalize(data.json())
+    matchList = pd.json_normalize(data['data.regions'])
+
+    # normalizes data
+    matchList = pd.json_normalize(matchList.iloc[0])
+    matchList = pd.json_normalize(matchList['rows'])
+    matchList = pd.json_normalize(matchList.iloc[0])
+    matchList = pd.json_normalize(matchList['cells'])
+
+    i = 0
+    # Fills normalized data into dataframe structure. Different dict than in function above
+    for row in matchList.iterrows():
+        game = pd.json_normalize(matchList.iloc[i])
+        game = game['text']
+
+        # Dataframe for the list of games. Gets saved in excel at last
+        gamedict = {
+            "Datum": splitTime(cleanWord(game[0]), False),
+            "Abfahrt": "",
+            "Ort": cleanWord(game[1]),
+            "Anspielzeit": splitTime(cleanWord(game[0]), True),
+            "Gegner": getOpponent(cleanWord(game[2]), cleanWord(game[3])),
+            "Anspielzeit2": "",
+            "Gegner2": ""
+
+        }
+
+        # appends dict to dataframe
+        games = games.append(gamedict, ignore_index=True)
+        i += 1
+
+    return games
+
+
+def getSameDayGameswithoutLiga(games):
+    for game in games.iterrows():
+        for maybeSameDayGame in games.iterrows():
+
+            if (game[0] < maybeSameDayGame[0]):
+
+                if str(game[1].Datum) == maybeSameDayGame[1].Datum:
+                    game[1].Gegner2 = maybeSameDayGame[1].Gegner
+                    game[1].Anspielzeit2 = maybeSameDayGame[1].Anspielzeit
+                    break
+
+
 # Gets all Games from the club and saves them in xlsx
-def getAllGames():
+def getAllGames(club_id):
+    print(club_id)
+    print("---")
     saveFileName = asksaveasfilename(parent=root, title="Speicherort auswählen", filetype=[("Excel", "*.xlsx")])
 
     if (saveFileName):
-        club_id = getId("club_id")
+        messagebox.showinfo("In Bearbeitung",
+                            "Das Erstellen der Liste dauert einen Moment. Wenn es fertig ist, wird der Dateimanager geöffnet")
 
         saison = getSaison()
 
@@ -193,7 +246,7 @@ def getAllGames():
         title = data['data.title']
         title = str(title[0])
 
-        while (page < 25):
+        while (page < 30):
             # Url from which Data is fetched
             allUrl = base_key + f'games?mode=club&club_id={club_id}&season={saison}&page={page}'
 
@@ -209,14 +262,17 @@ def getAllGames():
                 page += 1
 
         # Deletes excessive duplicates, then saves the file and opens in explorer
-        games.drop_duplicates(subset=['Datum', 'Liga', 'Ort'], inplace=True)
+
+        getSameDayGames(games)
+
+        games.drop_duplicates(subset=['Datum', 'Liga', 'Ort'], inplace=True, keep='first')
 
         saveExcel(games, title, saveFileName)
 
         openExplorer(saveFileName)
 
     else:
-        messagebox.showerror("Fehler", "Sie haben den Erstellungsvorgang abgebrochen")
+        messagebox.showinfo("Fehler", "Sie haben den Erstellungsvorgang abgebrochen")
 
 
 # Processes requestdata into dataframe
@@ -245,8 +301,8 @@ def createDataframe(data, games):
             "Ort": cleanWord(game[1]),
             "Anspielzeit": splitTime(cleanWord(game[0]), True),
             "Gegner": getOpponent(cleanWord(game[3]), cleanWord(game[4])),
-            "Anspielzeit 2": getSameDayMatch(game[0], game[2], matchList, i, "time"),
-            "Gegner 2": getSameDayMatch(game[0], game[2], matchList, i, "opponent"),
+            "Anspielzeit2": "",
+            "Gegner2": "",
 
         }
         # appends dict to dataframe
@@ -255,40 +311,16 @@ def createDataframe(data, games):
     return games
 
 
-# Processes data from match requests
-def createDataframeMatch(data, games):
-    data = pd.json_normalize(data.json())
-    matchList = pd.json_normalize(data['data.regions'])
+def getSameDayGames(games):
+    for game in games.iterrows():
+        for maybeSameDayGame in games.iterrows():
 
-    # normalizes data
-    matchList = pd.json_normalize(matchList.iloc[0])
-    matchList = pd.json_normalize(matchList['rows'])
-    matchList = pd.json_normalize(matchList.iloc[0])
-    matchList = pd.json_normalize(matchList['cells'])
+            if (game[0] < maybeSameDayGame[0]):
 
-    i = 0
-    # Fills normalized data into dataframe structure. Different dict than in function above
-    for row in matchList.iterrows():
-        game = pd.json_normalize(matchList.iloc[i])
-        game = game['text']
-
-        # Dataframe for the list of games. Gets saved in excel at last
-        gamedict = {
-            "Datum": splitTime(cleanWord(game[0]), False),
-            "Abfahrt": "",
-            "Ort": cleanWord(game[1]),
-            "Anspielzeit": splitTime(cleanWord(game[0]), True),
-            "Gegner": getOpponent(cleanWord(game[2]), cleanWord(game[3])),
-            "Anspielzeit 2": getSameDayMatchwithoutLiga(game[0], matchList, i, "time"),
-            "Gegner 2": getSameDayMatchwithoutLiga(game[0], matchList, i, "opponent")
-
-        }
-
-        # appends dict to dataframe
-        games = games.append(gamedict, ignore_index=True)
-        i += 1
-
-    return games
+                if str(game[1].Datum) == maybeSameDayGame[1].Datum and game[1].Liga == maybeSameDayGame[1].Liga:
+                    game[1].Gegner2 = maybeSameDayGame[1].Gegner
+                    game[1].Anspielzeit2 = maybeSameDayGame[1].Anspielzeit
+                    break
 
 
 # saves the datafram into an excel and adjusts layout
@@ -327,42 +359,6 @@ def saveExcel(games, title, filename):
     workbook.save(filename=xlsFilepath)
 
     return
-
-
-# compares games from a list to find matching Date Location used for Teams
-def getSameDayMatchwithoutLiga(date, matchliste, rowCount, type):
-    i = 0
-    for row in matchliste.iterrows():
-        if i != rowCount:
-            game = pd.json_normalize(matchliste.iloc[i])
-            game = game['text']
-
-            if splitTime(game[0], False) == splitTime(date, False) and type == "time":
-                return cleanWord(splitTime(game[0], True))
-
-            if splitTime(game[0], False) == splitTime(date, False) and type == "opponent":
-                return getOpponent(cleanWord(game[2]), cleanWord(game[3]))
-
-        i += 1
-    return "-"
-
-
-# compares games from a list to find matching Date Location and Liga. Used for allGames
-def getSameDayMatch(date, liga, matchliste, rowCount, type):
-    i = 0
-    for row in matchliste.iterrows():
-        if i != rowCount:
-            game = pd.json_normalize(matchliste.iloc[i])
-            game = game['text']
-
-            if splitTime(game[0], False) == splitTime(date, False) and game[2] == liga and type == "time":
-                return cleanWord(splitTime(game[0], True))
-
-            if splitTime(game[0], False) == splitTime(date, False) and game[2] == liga and type == "opponent":
-                return getOpponent(cleanWord(game[3]), cleanWord(game[4]))
-
-        i += 1
-    return "-"
 
 
 # Compares teamnames with "Eintracht Beromünster" and determines which one the opponent is
@@ -421,9 +417,9 @@ def openExplorer(saveFileName):
     saveFileName = makeInitialDir(saveFileName)
     file = askopenfile(parent=root, title="Erfolgreich gespeichert", initialdir=saveFileName, mode="r",
                        filetype=[("Excel", "*.xlsx")])
-    file = file.name
     if (file):
-        os.startfile(file)
+        selectedFile = file.name
+        os.startfile(selectedFile)
 
 
 # Gets the path without the filenam for openExplorer function
