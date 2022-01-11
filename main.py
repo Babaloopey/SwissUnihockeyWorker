@@ -1,3 +1,28 @@
+#To Reduce Errors in production
+import sys, os
+
+
+def override_where():
+    """ overrides certifi.core.where to return actual location of cacert.pem"""
+    # change this to match the location of cacert.pem
+    return os.path.abspath("cacert.pem")
+
+
+# is the program compiled?
+if hasattr(sys, "frozen"):
+    import certifi.core
+
+    os.environ["REQUESTS_CA_BUNDLE"] = override_where()
+    certifi.core.where = override_where
+
+    # delay importing until after where() has been replaced
+    import requests.utils
+    import requests.adapters
+    # replace these variables in case these modules were
+    # imported before we replaced certifi.core.where
+    requests.utils.DEFAULT_CA_BUNDLE_PATH = override_where()
+    requests.adapters.DEFAULT_CA_BUNDLE_PATH = override_where()
+
 # This is a the swiss Unihockey Worker from Eintracht Beromünster
 # You may change the Id's in the config File. Ids can be found on swissunihockey. Supposedly over the api v-2
 # https://api-v2.swissunihockey.ch/api/doc
@@ -36,7 +61,7 @@ def createGui():
     canvas.pack()
 
     titelFrame = tk.Frame(root)
-    titelFrame.place(relwidth=1, relheight=0.1, relx=0.00, rely=0.05)
+    titelFrame.place(relwidth=1, relheight=0.2, relx=0.00, rely=0.05)
 
     # columns for a grid in the gui
     column1 = tk.Frame(root)
@@ -131,6 +156,7 @@ def getTeamGames(team_id):
                 if ("Error" in str(error['type'])):
                     break
                 else:
+                    print(r.json())
                     games = createDataframeMatch(r, games)
                     page += 1
 
@@ -178,6 +204,7 @@ def getAllGames():
             if ("Error" in str(error['type'])):
                 break
             else:
+                print(r.json())
                 games = createDataframe(r, games)
                 page += 1
 
@@ -276,7 +303,6 @@ def saveExcel(games, title, filename):
     # Write excel to file using pandas to_excel
     games.to_excel(writer, startrow=1, sheet_name='Sheet1', index=False)
     # Indicate workbook and worksheet for formatting
-    workbook = writer.book
     worksheet = writer.sheets['Sheet1']
 
     # adjusts column-layout
@@ -351,13 +377,11 @@ def getOpponent(team1, team2):
 
 # Deletes excessive words from Liga
 def cleanLiga(word):
-    unwantedWords = ["Regional", "Aktive"]
+    word = word.replace("Regional", "")
+    new_word = word.replace("Aktive", "")
 
-    for unwantedWord in unwantedWords:
-        new_word = word.replace(unwantedWord, "")
-
-    description = new_word.split(',');
-    return description[0];
+    description = new_word.split(',')
+    return description[0]
 
 
 # Cleans the word from unwanted characters
@@ -378,16 +402,16 @@ def splitTime(datetime, type):
 
     if type == False:
         try:
-            array = datetime.split(',');
-            return array[0];
+            array = datetime.split(',')
+            return array[0]
         except:
             return "-"
 
 
     else:
         try:
-            array = datetime.split(',');
-            return array[1];
+            array = datetime.split(',')
+            return array[1]
         except:
             return "-"
 
@@ -404,10 +428,10 @@ def openExplorer(saveFileName):
 
 # Gets the path without the filenam for openExplorer function
 def makeInitialDir(path):
-    array = path.split('/');
+    array = path.split('/')
     path = path.replace(array[len(array) - 1], "")
 
-    return path;
+    return path
 
 
 # Function to determine game-saison. Changes on the month of april
@@ -425,6 +449,8 @@ def getId(searchTerm):
     for id in ids:
         if searchTerm in id:
             number = id.split('$')
+            print(searchTerm)
+            print(number[1])
             return number[1]
 
 

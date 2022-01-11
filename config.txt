@@ -13,3 +13,5 @@ id_herren1 = $428216
 id_herren2 = $428649
 
 club_id = $417058
+
+open_console = $False
