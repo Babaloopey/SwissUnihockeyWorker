@@ -22,6 +22,7 @@ Update Log:
 Version	Date		Action
 --------------------------------------
 1.0	11.01.22	Application first published
+1.1 12.01.22    Configuration Window and dynamic gui implemented
 
 
 
