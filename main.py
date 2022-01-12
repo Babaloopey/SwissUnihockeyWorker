@@ -45,82 +45,73 @@ from tkinter.filedialog import asksaveasfilename
 from tkinter.filedialog import askopenfile
 from tkinter import messagebox
 import configurationScript
+import math
 
 base_key = 'https://api-v2.swissunihockey.ch/api/'
-configFile = 'config.txt'
+configFile = 'config.json'
 
-with open(configFile) as f:
-    ids = f.readlines()
+teams = pd.read_json(configFile)
+clubname = teams.iloc[0]
+print(clubname)
+for team in teams.iterrows():
+    print(team[1].description)
+    print(team[1].id)
 
 root = tk.Tk()
 root.title("Spielplanerstellung")
 root.iconbitmap("ball.ico")
 
+def linesInGui():
+    buttonheight = 50
+    print(math.ceil(len(teams)/3))
+    return (math.ceil(len(teams)/3)*buttonheight)
 
 def createGui():
-    canvas = tk.Canvas(root, height=300, width=650)
+    canvas = tk.Canvas(root, height=(50+linesInGui()), width=650)
     canvas.pack()
 
     titelFrame = tk.Frame(root)
-    titelFrame.place(relwidth=1, relheight=0.2, relx=0.00, rely=0.05)
+    titelFrame.place(relwidth=0.8, height=40, relx=0.00, rely=0.05)
+    configFrame = tk.Frame(root)
+    configFrame.place(relwidth=0.2, height=40, relx=0.8, rely=0.05)
 
     # columns for a grid in the gui
     column1 = tk.Frame(root)
-    column1.place(relwidth=0.25, relheight=0.75, relx=0.05, rely=0.25)
+    column1.place(relwidth=0.25, relheight=0.75, relx=0.05, y=60)
 
     column2 = tk.Frame(root)
-    column2.place(relwidth=0.25, relheight=0.75, relx=0.375, rely=0.25)
+    column2.place(relwidth=0.25, relheight=0.75, relx=0.375, y=60)
 
     column3 = tk.Frame(root)
-    column3.place(relwidth=0.25, relheight=0.75, relx=0.7, rely=0.25)
+    column3.place(relwidth=0.25, relheight=0.75, relx=0.7, y=60)
 
-    greeting = tk.Label(titelFrame, text="Spielplanerstellung Eintracht Beromünster", font=("Arial", 25))
+    greeting = tk.Label(titelFrame, text=clubname[0], font=("Arial", 25))
     greeting.pack()
+
+    btn_configuration = tk.Button(configFrame, text="Konfiguration", fg="black", command=lambda: configurationScript.showWindow()).pack()
 
     # Team-Ids from swissunihockey. Are used with the buttons
     # team-Ids
-    id_aJun = getId("id_aJun")
-    id_bJun = getId("id_bJun")
-    id_cJun = getId("id_cJun")
-    id_dJun = getId("id_dJun")
-    id_aInnen = getId("id_aInnen")
-    id_bInnen = getId("id_bInnen")
-    id_cInnen = getId("id_cInnen")
-    id_dInnen = getId("id_dInnen")
-    id_damen = getId("id_damen")
-    id_herren1 = getId("id_herren1")
-    id_herren2 = getId("id_herren2")
-    club_id = getId("club_id")
+
+    for widget in column1.winfo_children():
+        widget.destroy()
+    for widget in column2.winfo_children():
+        widget.destroy()
+    for widget in column3.winfo_children():
+        widget.destroy()
+
+    for team in teams.iterrows():
+        if (team[0]+1 <= (len(teams) / 3)):
+            tk.Button(column1, text=team[1].description, padx=10, pady=10, fg="white", bg="#000000", width=50,
+                      command=lambda c=team: print(c)).pack()
+        elif (team[0]+1 <= (len(teams) / 3 * 2)):
+            tk.Button(column2, text=team[1].description, padx=10, pady=10, fg="white", bg="#000000", width=50,
+                      command=lambda c=team: print(c)).pack()
+        elif (team[0]+1 <= (len(teams) / 3 * 3)):
+            tk.Button(column3, text=team[1].description, padx=10, pady=10, fg="white", bg="#000000", width=50,
+                      command=lambda c=team: print(c)).pack()
 
     # Buttons for the gui
-    btn_AJun = tk.Button(column1, text="A Junioren", padx=10, pady=10, fg="white", bg="#000000", width=50,
-                         command=lambda: getTeamGames(id_aJun)).pack()
-    btn_BJun = tk.Button(column1, text="B Junioren", padx=10, pady=10, fg="white", bg="#000000", width=50,
-                         command=lambda: getTeamGames(id_bJun)).pack()
-    btn_CJun = tk.Button(column1, text="C Junioren", padx=10, pady=10, fg="white", bg="#000000", width=50,
-                         command=lambda: getTeamGames(id_cJun)).pack()
-    btn_Djun = tk.Button(column1, text="D Junioren", padx=10, pady=10, fg="white", bg="#000000", width=50,
-                         command=lambda: getTeamGames(id_dJun)).pack()
-
-    btn_AJuniorinnen = tk.Button(column2, text="A Juniorinnen", padx=10, pady=10, fg="white", bg="#000000", width=50,
-                                 command=lambda: getTeamGames(id_aInnen)).pack()
-    btn_BJuniorinnen = tk.Button(column2, text="B Juniorinnen", padx=10, pady=10, fg="white", bg="#000000", width=50,
-                                 command=lambda: getTeamGames(id_bInnen)).pack()
-    btn_CJuniorinnen = tk.Button(column2, text="C Juniorinnen", padx=10, pady=10, fg="white", bg="#000000", width=50,
-                                 command=lambda: getTeamGames(id_cInnen)).pack()
-    btn_DJuniorinnen = tk.Button(column2, text="D Juniorinnen", padx=10, pady=10, fg="white", bg="#000000",
-                                 width=50, command=lambda: getTeamGames(id_dInnen)).pack()
-    btn_configuration = tk.Button(column2, text="Konfiguration", padx=10, pady=10, fg="white", bg="#000000",
-                                 width=50, command=lambda: configurationScript.showWindow()).pack()
-
-    btn_allGames = tk.Button(column3, text="Alle Spiele", padx=10, pady=10, fg="white", bg="#000000", width=50,
-                             command=lambda: getAllGames(club_id)).pack()
-    btn_Herren1 = tk.Button(column3, text="Herren 1", padx=10, pady=10, fg="white", bg="#000000", width=50,
-                            command=lambda: getTeamGames(id_herren1)).pack()
-    btn_Herren2 = tk.Button(column3, text="Herren 2", padx=10, pady=10, fg="white", bg="#000000", width=50,
-                            command=lambda: getTeamGames(id_herren2)).pack()
-    btn_Damen = tk.Button(column3, text="Damen", padx=10, pady=10, fg="white", bg="#000000", width=50,
-                          command=lambda: getTeamGames(id_damen)).pack()
 
     root.mainloop()
 
@@ -445,12 +436,7 @@ def getSaison():
 
 
 def getId(searchTerm):
-    for id in ids:
-        if searchTerm in id:
-            number = id.split('$')
-            print(searchTerm)
-            print(number[1])
-            return number[1]
+    print(searchTerm)
 
 
 # Press the green button in the gutter to run the script.

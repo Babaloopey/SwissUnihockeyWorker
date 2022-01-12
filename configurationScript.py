@@ -1,6 +1,8 @@
 import tkinter as tk
 import os
 
+import json
+
 import datetime
 
 import requests
@@ -12,8 +14,7 @@ from tkinter.filedialog import askopenfile
 from tkinter import messagebox
 
 base_key = 'https://api-v2.swissunihockey.ch/api/'
-configFile = 'config.txt'
-
+configFile = 'config.json'
 
 
 def showWindow():
@@ -114,9 +115,10 @@ def getAllTeams(club, textFrame1, textFrame2, textFrame3):
 
     print()
     submitButton = tk.Button(textFrame3, text="Speichern", width=50, fg="white", height=1, bg='black',
-                             command=lambda c=club: submitTeams(teamsFromClub)).pack()
+                             command=lambda c=club: submitTeams(teamsFromClub, club)).pack()
     cancelButton = tk.Button(textFrame3, text="Abbrechen", width=50, fg="white", height=1, bg='black',
-                             command=lambda c=club: getAllClubs(globalSearchTerm, textFrame1, textFrame2, textFrame3)).pack()
+                             command=lambda c=club: getAllClubs(globalSearchTerm, textFrame1, textFrame2,
+                                                                textFrame3)).pack()
 
     descriptionLabel = tk.Label(textFrame1, text="Bezeichnung", width=50, fg="black", font=('Arial 10 bold')).pack()
     idLabel = tk.Label(textFrame2, text="ID", width=50, fg="black", font=('Arial 10 bold')).pack()
@@ -138,5 +140,21 @@ def getSaison():
     return saison
 
 
-def submitTeams(teams):
-    print(teams)
+def submitTeams(teams, club):
+    print(club)
+    teamDicts = []
+    clubdict = {
+        "description": club[0],
+        "id": club[3]
+    }
+    teamDicts.append(clubdict)
+
+    for team in teams.iterrows():
+        teamdict = {
+            "description": str(team[1].iloc[0]),
+            "id": team[1].iloc[3]
+        }
+        teamDicts.append(teamdict)
+
+    with open(configFile, 'w') as file:
+        json.dump(teamDicts, file)
