@@ -44,6 +44,7 @@ from openpyxl import load_workbook
 from tkinter.filedialog import asksaveasfilename
 from tkinter.filedialog import askopenfile
 from tkinter import messagebox
+import configurationScript
 
 base_key = 'https://api-v2.swissunihockey.ch/api/'
 configFile = 'config.txt'
@@ -109,6 +110,8 @@ def createGui():
                                  command=lambda: getTeamGames(id_cInnen)).pack()
     btn_DJuniorinnen = tk.Button(column2, text="D Juniorinnen", padx=10, pady=10, fg="white", bg="#000000",
                                  width=50, command=lambda: getTeamGames(id_dInnen)).pack()
+    btn_configuration = tk.Button(column2, text="Konfiguration", padx=10, pady=10, fg="white", bg="#000000",
+                                 width=50, command=lambda: configurationScript.showWindow()).pack()
 
     btn_allGames = tk.Button(column3, text="Alle Spiele", padx=10, pady=10, fg="white", bg="#000000", width=50,
                              command=lambda: getAllGames(club_id)).pack()
