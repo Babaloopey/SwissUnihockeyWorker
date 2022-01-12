@@ -19,7 +19,6 @@ clubname = teams.iloc[0]
 # Compares teamnames with "Eintracht Beromünster" and determines which one the opponent is
 def getOpponent(team1, team2):
     if clubname[0] not in team1:
-        print(clubname[0])
         return team1
     elif clubname[0] not in team2:
         return team2

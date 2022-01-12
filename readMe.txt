@@ -9,14 +9,9 @@ Installation Guide:
 
 	Maybe you have to install python in advance: https://www.python.org/downloads/
 
-You may adjust the Ids in the config File located in this directory:
-	$xxx means an Id
-	$None means this Id is empty
+You may adjust the Ids in the config.json located in this directory. The application builds the gui based on this file
 
-	Do not adjust the Names of the Ids
-
-
-This is v1.0 at the time of 11.01.2022
+This is v1.1 at the time of 12.01.2022
 
 Update Log:
 Version	Date		Action
@@ -29,6 +24,17 @@ Version	Date		Action
 
 Do not use for commercial use. This is a free project. You may distribute and share it.
 created by Florin Rüedi, Basislehrjahr 2022
+
+Documentation:
+    main.exe -> Starts the application
+    gui.py -> Manages the whole gui
+    projecctVariables.py -> Manages global project-variables
+    allGames.py -> Manages how the data for allGames is handled
+    teamGames.py -> Manages how the data for a Team is handled
+    helpers.py -> Functions which are used from more than 1 module, such as data-formating functions
+    configurationScript.py -> Manages the whole configuration window and how things get saved in the config.json
+    config.json -> holds the data for the gui. Can be changed manually or through the "Konfigurieren" button
+
 
 
 
