@@ -75,10 +75,27 @@ def create_gui():
 # Looks whether allGames must be called or TeamGames since it cannot be defined in the buttons themself
 def call_distributor(team, club_name):
     print(club_name[0])
+    wait_animation()
     if str(club_name[0]) == str(team[1].description):
         all_games.get_all_games(team[1].id)
     else:
         team_games.get_team_games(team[1].id)
+
+    create_gui()
+
+
+def wait_animation():
+    for widget in root.winfo_children():
+        widget.destroy()
+
+    canvas = tk.Canvas(root, height=(70 + lines_in_gui(project_variables.update_teams())), width=650)
+    canvas.pack()
+
+    loading_frame = tk.Frame(root)
+    loading_frame.place(relwidth=0.8, relheight=0.2, relx=0.1, rely=0.4)
+
+    loading_label = tk.Label(loading_frame, text="Spielplan wird erstellt...", font=("Calibri", 30))
+    loading_label.pack()
 
 
 def end_application():
