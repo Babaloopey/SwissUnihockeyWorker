@@ -1,4 +1,3 @@
-import tkinter as tk
 import os
 
 import datetime
@@ -8,16 +7,16 @@ import pandas as pd
 from openpyxl import load_workbook
 from tkinter.filedialog import askopenfile
 
-import projectVariables
+import project_variables
 
 # takes Global variables
-root = projectVariables.root
-teams = projectVariables.updateTeams()
+root = project_variables.root
+teams = project_variables.update_teams()
 clubname = teams.iloc[0]
 
 
 # Compares teamnames with "Eintracht Beromünster" and determines which one the opponent is
-def getOpponent(team1, team2):
+def get_opponent(team1, team2):
     if clubname[0] not in team1:
         return team1
     elif clubname[0] not in team2:
@@ -27,7 +26,7 @@ def getOpponent(team1, team2):
 
 
 # Deletes excessive words from Liga
-def cleanLiga(word):
+def clean_liga(word):
     word = word.replace("Regional", "")
     new_word = word.replace("Aktive", "")
 
@@ -36,73 +35,75 @@ def cleanLiga(word):
 
 
 # Cleans the word from unwanted characters
-def cleanWord(word):
-    unwantedCharacters = "[]'"
+def clean_word(word):
+    unwanted_characters = "[]'"
 
     word = str(word)
 
-    for character in unwantedCharacters:
+    for character in unwanted_characters:
         word = word.replace(character, "")
 
     return word
 
 
-# Splits time so date and time are seperately storable. Takes bool as input to determine which has to be returned
-def splitTime(datetime, type):
-    datetime = str(datetime)
+# Splits time so date and time are separately stored. Takes bool as input to determine which has to be returned
+def split_time(date_time, time_asked):
+    date_time = str(date_time)
 
-    if type == False:
+    if not time_asked:
         try:
-            array = datetime.split(',')
+            array = date_time.split(',')
             return array[0]
-        except:
+        except Exception as ex:
+            print(ex)
             return "-"
 
     else:
         try:
-            array = datetime.split(',')
+            array = date_time.split(',')
             return array[1]
-        except:
+        except Exception as ex:
+            print(ex)
             return "-"
 
 
 # Opens Explorer with inputted directory. Used to show the saved file at the end
-def openExplorer(saveFileName):
-    saveFileName = makeInitialDir(saveFileName)
-    file = askopenfile(parent=root, title="Erfolgreich gespeichert", initialdir=saveFileName, mode="r",
+def open_explorer(save_file_name):
+    save_file_name = make_initial_dir(save_file_name)
+    file = askopenfile(parent=root, title="Erfolgreich gespeichert", initialdir=save_file_name, mode="r",
                        filetype=[("Excel", "*.xlsx")])
-    if (file):
-        selectedFile = file.name
-        os.startfile(selectedFile)
+    if file:
+        selected_file = file.name
+        os.startfile(selected_file)
 
 
-# Gets the path without the filenam for openExplorer function
-def makeInitialDir(path):
+# Gets the path without the filename for openExplorer function
+def make_initial_dir(path):
     array = path.split('/')
     path = path.replace(array[len(array) - 1], "")
 
     return path
 
 
-# Function to determine game-saison. Changes on the month of april
-def getSaison():
+# Function to determine game-season. Changes on the month of april
+def get_season():
     now = datetime.datetime.now()
-    if (now.month > 3):
-        saison = now.year
+    if now.month > 3:
+        season = now.year
     else:
-        saison = now.year - 1
+        season = now.year - 1
 
-    return saison
+    return season
 
 
-# saves the datafram into an excel and adjusts layout
-def saveExcel(games, title, filename):
+# saves the dataframe into an excel and adjusts layout
+def save_excel(games, title, filename):
     # Set destination directory to save excel.
     if ".xlsx" not in filename:
         filename = filename + '.xlsx'
 
-    xlsFilepath = filename
-    writer = pd.ExcelWriter(xlsFilepath, engine='xlsxwriter')
+    xls_filepath = filename
+    writer = pd.ExcelWriter(xls_filepath, engine='xlsxwriter')
 
     # Write excel to file using pandas to_excel
     games.to_excel(writer, startrow=1, sheet_name='Sheet1', index=False)
@@ -122,12 +123,12 @@ def saveExcel(games, title, filename):
 
     # Adds the title to the existing File
     # load excel file
-    workbook = load_workbook(filename=xlsFilepath)
+    workbook = load_workbook(filename=xls_filepath)
     # open workbook
     sheet = workbook.active
     # modify the desired cell
     sheet["A1"] = title
     # save the file
-    workbook.save(filename=xlsFilepath)
+    workbook.save(filename=xls_filepath)
 
     return

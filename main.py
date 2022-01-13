@@ -1,6 +1,9 @@
 # To Reduce Errors in production
-import sys, os
+import os
+import sys
+
 import gui
+
 
 def override_where():
     """ overrides certifi.core.where to return actual location of cacert.pem"""
@@ -24,14 +27,15 @@ if hasattr(sys, "frozen"):
     requests.utils.DEFAULT_CA_BUNDLE_PATH = override_where()
     requests.adapters.DEFAULT_CA_BUNDLE_PATH = override_where()
 
+
 # This is a the swiss Unihockey Worker from Eintracht Beromünster
 # You may change the Id's in the config File. Ids can be found on swissunihockey. Supposedly over the api v-2
 # https://api-v2.swissunihockey.ch/api/doc
 
-#Starts the gui and gets ready for all interaction
+# Starts the gui and gets ready for all interaction
 def start():
-    gui.createGui()
+    gui.create_gui()
 
-#starts
+
+# starts
 start()
-
