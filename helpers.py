@@ -10,13 +10,11 @@ from tkinter.filedialog import askopenfile
 import project_variables
 
 # takes Global variables
-root = project_variables.root
-teams = project_variables.update_teams()
-clubname = teams.iloc[0]
-
 
 # Compares teamnames with "Eintracht Beromünster" and determines which one the opponent is
 def get_opponent(team1, team2):
+    teams = project_variables.update_teams()
+    clubname = teams.iloc[0]
     if clubname[0] not in team1:
         return team1
     elif clubname[0] not in team2:
@@ -69,6 +67,7 @@ def split_time(date_time, time_asked):
 
 # Opens Explorer with inputted directory. Used to show the saved file at the end
 def open_explorer(save_file_name):
+    root = project_variables.root
     save_file_name = make_initial_dir(save_file_name)
     file = askopenfile(parent=root, title="Erfolgreich gespeichert", initialdir=save_file_name, mode="r",
                        filetype=[("Excel", "*.xlsx")])

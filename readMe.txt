@@ -14,10 +14,15 @@ You may adjust the Ids in the config.json located in this directory. The applica
 This is v1.1 at the time of 12.01.2022
 
 Update Log:
+Bugfix +0.01
+Major Update + 0.1
+Rework +1
+
 Version	Date		Action
 --------------------------------------
 1.0/ 11.01.22	Application first published
-1.1/ 12.01.22    Configuration Window and dynamic gui implemented
+1.1/ 12.01.22   Configuration Window and dynamic gui implemented
+1.11 18.01.22   Bug fixed when determining opponent after reconfiguring
 
 
 
