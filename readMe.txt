@@ -7,7 +7,6 @@ Installation Guide:
 	Edit the config File to your liking.
 	Start main.exe in /main
 
-	Maybe you have to install python in advance: https://www.python.org/downloads/
 
 You may adjust the Ids in the config.json located in this directory. The application builds the gui based on this file
 
