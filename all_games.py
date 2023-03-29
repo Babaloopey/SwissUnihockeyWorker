@@ -13,16 +13,12 @@ base_key = project_variables.base_key
 
 
 # Gets all Games from the club and saves them in xlsx
-def get_all_games(club_id):
+def get_all_games(club_id, club_name):
     print(club_id)
     print("---")
-    save_file_name = asksaveasfilename(parent=root, title="Speicherort auswählen", filetype=[("Excel", "*.xlsx")])
+    save_file_name = asksaveasfilename(parent=root, title="Speicherort auswählen", filetype=[("Excel", "*.xlsx")], initialfile=club_name)
 
     if save_file_name:
-        messagebox.showinfo("In Bearbeitung",
-                            "Das Erstellen der Liste dauert einen Moment. Wenn es fertig ist, "
-                            "wird der Dateimanager geöffnet")
-
         season = helpers.get_season()
 
         # Preparation for data requests
@@ -78,7 +74,7 @@ def get_all_games(club_id):
         helpers.open_explorer(save_file_name)
 
     else:
-        messagebox.showinfo("Fehler", "Sie haben den Erstellungsvorgang abgebrochen")
+        print("Fehler", "Sie haben den Erstellungsvorgang abgebrochen")
 
 
 # Processes requestdata into dataframe
