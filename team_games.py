@@ -12,11 +12,11 @@ base_key = project_variables.base_key
 
 
 # Function which gets called when a team-button is pressed
-def get_team_games(team_id):
+def get_team_games(team_id, team_name):
     print(team_id)
     print("---")
     if team_id:
-        save_file_name = asksaveasfilename(parent=root, title="Speicherort auswählen", filetype=[("Excel", "*.xlsx")])
+        save_file_name = asksaveasfilename(parent=root, title="Speicherort auswählen", filetype=[("Excel", "*.xlsx")], initialfile=team_name)
 
         if save_file_name:
             saison = helpers.get_season()
@@ -77,7 +77,7 @@ def get_team_games(team_id):
 
         # Falls kein Speicherort ausgewählt wird
         else:
-            messagebox.showinfo("Fehler", "Sie haben den Erstellungsvorgang abgebrochen")
+            print("Fehler", "Sie haben den Erstellungsvorgang abgebrochen")
     else:
         messagebox.showerror("Fehler", "Keine ID hinterlegt. Korrigieren sie diese im config File", )
 
