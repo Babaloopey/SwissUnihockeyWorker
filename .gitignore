@@ -1,6 +1,7 @@
-/venv
-/build
-/output
+venv/
+build/
+output/
+dist/
 
 __pycache__/
 
