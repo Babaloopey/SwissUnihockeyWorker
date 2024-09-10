@@ -22,6 +22,23 @@ def get_opponent(team1, team2):
     else:
         return "Undefiniert"
 
+def get_hometeam(team1, team2):
+    teams = project_variables.update_teams()
+    clubname = teams.iloc[0]
+    if clubname[0] in team1:
+        return team1
+    elif clubname[0] in team2:
+        return team2
+    else:
+        return "Undefiniert"
+
+def get_hometeam_endung(hometeam):
+    teams = project_variables.update_teams()
+    clubname = teams.iloc[0]
+
+    hometeam = hometeam.replace(clubname[0], "")
+    hometeam = hometeam.replace(" ", "")
+    return hometeam
 
 # Deletes excessive words from Liga
 def clean_liga(word):

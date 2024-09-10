@@ -68,6 +68,8 @@ def get_all_games(club_id, club_name):
         get_same_day_games(games)
         # Deletes excessive duplicates, then saves the file and opens in explorer
         games.drop_duplicates(subset=['Datum', 'Liga', 'Ort'], inplace=True, keep='first')
+        # Deletes the Heimbezeichnung that was necessary for matching different teams in the same Liga
+        games.drop('Heimbezeichnung', axis=1, inplace=True)
 
         # saves data as excel and then shows where it has been saved
         helpers.save_excel(games, title, save_file_name)
@@ -93,6 +95,8 @@ def create_dataframe(data, games):
     for row in match_list.iterrows():
         game = pd.json_normalize(match_list.iloc[i])
         game = game['text']
+
+        print(game)
         # Dict for the list of games. Gets saved in excel at last
 
         game_dict = {
@@ -105,7 +109,7 @@ def create_dataframe(data, games):
             "Gegner": helpers.get_opponent(helpers.clean_word(game[3]), helpers.clean_word(game[4])),
             "Anspielzeit2": "",
             "Gegner2": "",
-
+            "Heimbezeichnung": helpers.get_hometeam(helpers.clean_word(game[3]), helpers.clean_word(game[4])),
         }
         # appends dict to dataframe
         games = games.append(game_dict, ignore_index=True)
@@ -120,7 +124,9 @@ def get_same_day_games(games):
 
             if game[0] < maybe_same_day_game[0]:
 
-                if str(game[1].Datum) == maybe_same_day_game[1].Datum and game[1].Liga == maybe_same_day_game[1].Liga:
+                if str(game[1].Datum) == maybe_same_day_game[1].Datum and game[1].Liga == maybe_same_day_game[1].Liga and game[1].Ort == maybe_same_day_game[1].Ort and game[1].Heimbezeichnung == maybe_same_day_game[1].Heimbezeichnung:
+                    game[1].Liga = game[1].Liga + " " + helpers.get_hometeam_endung(game[1].Heimbezeichnung)
+                    maybe_same_day_game[1].Liga = maybe_same_day_game[1].Liga + " " + helpers.get_hometeam_endung(maybe_same_day_game[1].Heimbezeichnung)
                     game[1].Gegner2 = maybe_same_day_game[1].Gegner
                     game[1].Anspielzeit2 = maybe_same_day_game[1].Anspielzeit
                     break
